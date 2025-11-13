@@ -20,12 +20,44 @@ jobs:
         id: version
         run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
 
-      - name: Create module ZIP
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Pillow for logo creation
+        run: pip install Pillow
+
+      - name: Create logo.png
         run: |
           cd enviamo_connector
-          zip -r ../enviamo-connector-${{ steps.version.outputs.VERSION }}.zip . \
-            -x "*.git*" -x "*node_modules*" -x "*tests*" -x "*.DS_Store" -x "*__pycache__*"
+          python create_logo.py
           cd ..
+
+      - name: Create module ZIP with Python
+        run: |
+          python3 << 'EOF'
+          import os
+          import zipfile
+          from pathlib import Path
+
+          version = "${{ steps.version.outputs.VERSION }}"
+          source_dir = Path('enviamo_connector')
+          output_zip = Path(f'enviamo-connector-{version}.zip')
+
+          with zipfile.ZipFile(output_zip, 'w', zipfile.ZIP_DEFLATED) as zipf:
+              for root, dirs, files in os.walk(source_dir):
+                  dirs[:] = [d for d in dirs if not d.startswith('.') and d not in ['tests', 'node_modules', '__pycache__']]
+                  for file in files:
+                      if file.startswith('.') or file.endswith('.pyc') or file == 'create_logo.py':
+                          continue
+                      file_path = Path(root) / file
+                      arcname = file_path.relative_to(source_dir)
+                      arcname_unix = str(arcname).replace('\\', '/')
+                      zipf.write(file_path, arcname_unix)
+
+          print(f"ZIP created: {output_zip} ({output_zip.stat().st_size / 1024:.2f} KB)")
+          EOF
 
           # Verificar que el ZIP se creó correctamente
           ls -lh enviamo-connector-${{ steps.version.outputs.VERSION }}.zip
