@@ -26,7 +26,8 @@ jobs:
 
       - name: Check PHP syntax
         run: |
-          find enviamo_connector -name "*.php" -exec php -l {} \; | grep -v "No syntax errors"
+          find enviamo_connector -name "*.php" -print0 | xargs -0 -n1 php -l
+          echo "✅ PHP syntax check passed"
 
   security-scan:
     name: Security Scan
