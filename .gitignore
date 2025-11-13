@@ -1,0 +1,41 @@
+# PrestaShop Module - Enviamo Connector
+# https://github.com/enviamo/prestashop-module
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PHP
+vendor/
+composer.lock
+*.log
+
+# Tests
+/tests/coverage/
+/phpunit.xml
+
+# Build artifacts
+*.zip
+/build/
+/dist/
+
+# Environment
+.env
+.env.local
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# Node modules (si usamos npm para assets)
+node_modules/
+package-lock.json

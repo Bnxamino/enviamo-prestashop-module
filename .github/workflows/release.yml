@@ -1,0 +1,77 @@
+name: Create Release and ZIP
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger en tags v1.0.0, v1.0.1, etc.
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create module ZIP
+        run: |
+          cd enviamo_connector
+          zip -r ../enviamo-connector-${{ steps.version.outputs.VERSION }}.zip . \
+            -x "*.git*" -x "*node_modules*" -x "*tests*" -x "*.DS_Store" -x "*__pycache__*"
+          cd ..
+
+          # Verificar que el ZIP se creó correctamente
+          ls -lh enviamo-connector-${{ steps.version.outputs.VERSION }}.zip
+
+      - name: Generate SHA256 checksum
+        id: checksum
+        run: |
+          CHECKSUM=$(sha256sum enviamo-connector-${{ steps.version.outputs.VERSION }}.zip | awk '{print $1}')
+          echo "SHA256=$CHECKSUM" >> $GITHUB_OUTPUT
+          echo "SHA256: $CHECKSUM"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: enviamo-connector-${{ steps.version.outputs.VERSION }}.zip
+          body: |
+            ## 📦 Enviamo Connector v${{ steps.version.outputs.VERSION }}
+
+            ### Descarga
+            - **Archivo**: [enviamo-connector-${{ steps.version.outputs.VERSION }}.zip](https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.VERSION }}/enviamo-connector-${{ steps.version.outputs.VERSION }}.zip)
+            - **SHA256**: `${{ steps.checksum.outputs.SHA256 }}`
+
+            ### Instalación
+            1. Descarga el archivo ZIP
+            2. Ve a `Módulos > Gestor de Módulos` en tu admin de PrestaShop
+            3. Haz clic en "Subir un módulo"
+            4. Arrastra el archivo ZIP descargado
+            5. ¡Listo! Ahora conecta tu tienda con Enviamo
+
+            ### Changelog
+            Ver [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) para detalles completos.
+
+            ---
+
+            **Compatibilidad**: PrestaShop 1.7.6.0+ | PHP 7.1+ | MySQL 5.6+
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Notify Enviamo Backend
+        if: success()
+        run: |
+          curl -X POST https://backend.parafarmaciaintegrativa.es/api/v1/modules/prestashop/new-release \
+            -H "Authorization: Bearer ${{ secrets.ENVIAMO_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"version\": \"${{ steps.version.outputs.VERSION }}\",
+              \"download_url\": \"https://github.com/${{ github.repository }}/releases/download/v${{ steps.version.outputs.VERSION }}/enviamo-connector-${{ steps.version.outputs.VERSION }}.zip\",
+              \"sha256\": \"${{ steps.checksum.outputs.SHA256 }}\",
+              \"changelog_url\": \"https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md\"
+            }" || echo "Failed to notify Enviamo backend (non-critical)"

@@ -1,0 +1,109 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  php-lint:
+    name: PHP Syntax Check
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php-version: ['7.1', '7.4', '8.0', '8.1', '8.2']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          coverage: none
+
+      - name: Check PHP syntax
+        run: |
+          find enviamo_connector -name "*.php" -exec php -l {} \; | grep -v "No syntax errors"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run security scan
+        uses: StepSecurity/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Check for secrets
+        run: |
+          # Verificar que no haya secrets expuestos
+          if grep -r "env_live_" enviamo_connector/ --exclude-dir=".git"; then
+            echo "ERROR: Found exposed API keys!"
+            exit 1
+          fi
+
+          if grep -r "password\s*=\s*['\"]" enviamo_connector/ --exclude-dir=".git"; then
+            echo "ERROR: Found hardcoded passwords!"
+            exit 1
+          fi
+
+          echo "✅ No secrets found in code"
+
+  validate-structure:
+    name: Validate Module Structure
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check required files
+        run: |
+          REQUIRED_FILES=(
+            "enviamo_connector/enviamo_connector.php"
+            "enviamo_connector/config.xml"
+            "enviamo_connector/index.php"
+            "enviamo_connector/classes/EnviamoAPI.php"
+            "enviamo_connector/classes/EnviamoWebhook.php"
+            "enviamo_connector/classes/EnviamoLogger.php"
+            "README.md"
+            "CHANGELOG.md"
+            "LICENSE"
+          )
+
+          for file in "${REQUIRED_FILES[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Missing required file: $file"
+              exit 1
+            fi
+          done
+
+          echo "✅ All required files present"
+
+      - name: Validate config.xml
+        run: |
+          xmllint --noout enviamo_connector/config.xml && echo "✅ config.xml is valid" || exit 1
+
+  check-compatibility:
+    name: PrestaShop Compatibility Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check minimum PS version
+        run: |
+          MIN_VERSION=$(grep -oP "MIN_PS_VERSION = '\K[^']+" enviamo_connector/enviamo_connector.php)
+          echo "Minimum PrestaShop version: $MIN_VERSION"
+
+          if [ -z "$MIN_VERSION" ]; then
+            echo "❌ MIN_PS_VERSION not found"
+            exit 1
+          fi
+
+          echo "✅ PrestaShop version check passed"
