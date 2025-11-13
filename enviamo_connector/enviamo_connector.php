@@ -16,7 +16,7 @@ require_once dirname(__FILE__) . '/classes/EnviamoAPI.php';
 require_once dirname(__FILE__) . '/classes/EnviamoWebhook.php';
 require_once dirname(__FILE__) . '/classes/EnviamoLogger.php';
 
-class Enviamo_Connector extends Module
+class EnviamoConnector extends Module
 {
     const MODULE_NAME = 'enviamo_connector';
     const VERSION = '1.0.0';
