@@ -1,6 +1,6 @@
 # 📦 Enviamo Connector para PrestaShop
 
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/enviamo/prestashop-module/releases)
+[![Version](https://img.shields.io/badge/version-1.0.2-blue.svg)](https://github.com/Bnxamino/enviamo-prestashop-module/releases)
 [![PrestaShop](https://img.shields.io/badge/PrestaShop-1.7.6.0+-orange.svg)](https://www.prestashop.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![PHP](https://img.shields.io/badge/PHP-7.1+-purple.svg)](https://www.php.net/)
@@ -36,7 +36,7 @@
 ### Opción 1: Instalación desde GitHub (Recomendada)
 
 1. **Descarga el módulo**:
-   - Ve a [Releases](https://github.com/enviamo/prestashop-module/releases/latest)
+   - Ve a [Releases](https://github.com/Bnxamino/enviamo-prestashop-module/releases/latest)
    - Descarga el archivo `enviamo-connector-X.X.X.zip`
 
 2. **Instala en PrestaShop**:
@@ -176,7 +176,7 @@ Este proyecto está bajo la licencia MIT. Ver [LICENSE](LICENSE) para más detal
 
 - 📧 **Email**: [soporte@enviamo.es](mailto:soporte@enviamo.es)
 - 💬 **Chat en vivo**: [enviamo.es](https://enviamo.es)
-- 🐛 **Reportar bug**: [GitHub Issues](https://github.com/enviamo/prestashop-module/issues)
+- 🐛 **Reportar bug**: [GitHub Issues](https://github.com/Bnxamino/enviamo-prestashop-module/issues)
 - 📖 **Documentación**: [docs.enviamo.es](https://docs.enviamo.es)
 
 ---
